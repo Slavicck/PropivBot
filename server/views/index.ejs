@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="content-type" content="text/html; charset=utf8" />
+
+    <title>Document</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="./styles/main.css?v0.0.32">
+</head>
+
+<body style="background-color: black;">
+    <div class="container">
+        <div class="screen-1__wrapper">
+
+            <div class="screen-1__block-1">
+                <h5 class="screen-1__block-1__heading">probiv.bot</h5>
+                <p id="toolCountText" class="screen-1__block-1__p"> инструментов <br>по поиску информации</p>
+            </div>
+
+            <div class="input-query">
+                <input id="query-search" placeholder="введите запрос" name="query-search" class="input-query__input" />
+
+                <button class="input-query__search-button" onclick="search()"><img src="./src/search-icon.svg"
+                        alt=""></button>
+            </div>
+
+
+            <div class="filters-query">
+                <span class="filters-query__heading">Фильтры: </span>
+
+                <label class="control control-checkbox">
+                    github скрипты
+                    <input type="checkbox" checked="checked" value="github">
+                    <div class="control_indicator"></div>
+                </label>
+
+                <label class="control control-checkbox">
+                    бесплатно
+                    <input type="checkbox" checked="checked" value="Бесплатно">
+                    <div class="control_indicator"></div>
+                </label>
+
+                <label class="control control-checkbox">
+                    telegram боты
+                    <input type="checkbox" checked="checked" value="Источник">
+                    <div class="control_indicator"></div>
+                </label>
+
+                <label class="control control-checkbox">
+                    🇷🇺
+                    <input type="checkbox" checked="checked" value="RU">
+                    <div class="control_indicator"></div>
+                </label>
+
+                <label class="control control-checkbox">
+                    🇧🇾
+                    <input type="checkbox" checked="checked" value="BL">
+                    <div class="control_indicator"></div>
+                </label>
+
+                <label class="control control-checkbox">
+                    🇺🇦
+                    <input type="checkbox" checked="checked" value="UA">
+                    <div class="control_indicator"></div>
+                </label>
+
+                <label class="control control-checkbox">
+                    🇰🇿
+                    <input type="checkbox" checked="checked" value="KZ">
+                    <div class="control_indicator"></div>
+                </label>
+
+                <label class="control control-checkbox">
+                    🇦🇲
+                    <input type="checkbox" checked="checked" value="ARM">
+                    <div class="control_indicator"></div>
+                </label>
+
+                <label class="control control-checkbox">
+                    🇺🇸
+                    <input type="checkbox" checked="checked" value="USA">
+                    <div class="control_indicator"></div>
+                </label>
+
+                <label class="control control-checkbox">
+                    🇪🇺
+                    <input type="checkbox" checked="checked" value="EU">
+                    <div class="control_indicator"></div>
+                </label>
+
+
+                <div class="services-query">
+                    <button id="servicesButton" class="services-button services-active" style="margin-left: 1%;"
+                        onclick="showServices()">сервисы</button>
+                    <button id="productsButton" class="services-button" style="margin-right: 1%;"
+                        onclick="showProducts()">услуги</button>
+                </div>
+            </div>
+            <div class="byNumber">
+                <% for (const category in categorySubcategoriesMap) { %>
+                    <div class="by-number">
+                        <h1 class="by-number__heading" data-category="<%= category %>">
+                            <p>
+                                <%= category %>
+                            </p>
+                        </h1>
+                        <div class="wrapper__by-numbers">
+                            <% categorySubcategoriesMap[category].forEach(subcategory=> { %>
+                                <div class="item" data-subcategory="<%= subcategory %>"
+                                    onClick="loadService('<%= subcategory %>')">
+                                    <span class="item__heading">
+                                        <%= subcategory %>
+                                    </span>
+                                    <span class="item__quanity"></span>
+                                </div>
+                                <% }); %>
+                        </div>
+                    </div>
+                    <% } %>
+            </div>
+
+
+            <button class="btn-add-to-catalog">Добавить в каталог</button>
+        </div>
+    </div>
+
+    <script>
+
+let selectedSubcategory = '';
+        document.addEventListener('DOMContentLoaded', function () {
+            updateResults();
+            document.querySelectorAll('.filters-query .control-checkbox input[type="checkbox"]').forEach(function (checkbox) {
+                checkbox.addEventListener('change', function () {
+                    updateResults();
+                });
+            });
+            document.querySelectorAll('.input-query__search-button').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    updateResults();
+                });
+            });
+        });
+
+
+        function showServices() {
+            window.location.href = "/";
+        };
+
+
+        function getSelectedValues() {
+            var selectedValues = [];
+            document.querySelectorAll('.filters-query .control-checkbox input[type="checkbox"]:checked').forEach(function (checkbox) {
+                selectedValues.push(checkbox.value);
+            });
+            return selectedValues;
+        };
+
+
+        function search() {
+            const searchTerm = document.getElementById('query-search').value;
+            return searchTerm;
+        };
+
+
+        function updateResults() {
+            var selectedValues = getSelectedValues();
+            var searchTerm = search();
+
+            fetch('/filter', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ selectedValues: selectedValues, searchTerm: searchTerm })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Ошибка при выполнении запроса updateResults');
+                    };
+                    return response.json();
+                })
+                .then(data => {
+                    const parentElement  = document.querySelector('.byNumber');
+                    const childElement = parentElement.querySelector('.by-number');
+                    filterData = data.filterData;
+
+                    if(childElement){
+                    let toolCount = 0;
+
+                    const uniqueCategoryNames = data.uniqueCategoryNames;
+                    console.log(uniqueCategoryNames);
+                    const countByCategory = {};
+                    console.log("filterData",filterData);
+
+                    filterData.forEach(item => {
+                        const category = item['Подкатегория'];
+                        if (uniqueCategoryNames.includes(category)) {
+                            toolCount++;
+                            countByCategory[category] = (countByCategory[category] || 0) + 1;
+                        };
+
+                    });
+
+                    const toolCountText = document.getElementById('toolCountText');
+                    toolCountText.innerHTML = toolCount + ' инструментов<br> по поиску информации';
+
+                    const blocksByNumber = document.querySelectorAll('.byNumber .by-number');
+                    let allItemsHidden = true;
+
+                    blocksByNumber.forEach(block => {
+                        const items = block.querySelectorAll('.wrapper__by-numbers .item');
+                        let anyItemVisible = false;
+
+                        items.forEach(item => {
+                            const subcategory = item.getAttribute('data-subcategory');
+                            const count = countByCategory[subcategory] || 0;
+                            const subcategoryInFilterData = filterData.some(data => data['Подкатегория'] === subcategory);
+                            const subcategoryInCategorySubcategoriesMap = filterData.hasOwnProperty(subcategory);
+
+                            if (subcategoryInFilterData || subcategoryInCategorySubcategoriesMap) {
+                                item.style.display = 'flex';
+                                anyItemVisible = true;
+                                allItemsHidden = false;
+                            } else {
+                                item.style.display = 'none';
+                            }
+                            item.querySelector('.item__quanity').textContent = count;
+                        });
+
+                        if (anyItemVisible) {
+                            block.style.display = 'block';
+                        } else {
+                            block.style.display = 'none';
+                        }
+                    });
+
+                    if (allItemsHidden) {
+                        alert("Ничего не найдено");
+                    }
+                }else{
+                    loadService(selectedSubcategory);
+                }
+
+                })
+                .catch(error => {
+                    console.error('Ошибка при выполнении запроса updateResults:', error);
+                    throw error;
+                });
+        };
+
+        function loadService(subcategory) {
+            fetch(`/service?subcategory=${subcategory}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ filterData: filterData })
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.text();
+                    } else {
+                        throw new Error('Ошибка загрузки сервиса');
+                    }
+                })
+                .then(html => {
+                    selectedSubcategory = subcategory;
+                    const loadServiceItem = document.querySelector(".byNumber");
+                    loadServiceItem.innerHTML = html;
+                    const itemCount = document.querySelectorAll(".item").length;
+                    const toolCountText = document.getElementById('toolCountText');
+                    toolCountText.innerHTML = `${itemCount} инструмента <br>поиска ${subcategory}`
+                    if (itemCount === 0) {
+                        alert("Ничего не найдено");
+                    };
+                })
+                .catch(error => {
+                    console.error('Ошибка при выполнении запроса loadService:', error);
+                });
+        };
+
+    </script>
+</body>
+
+</html>
